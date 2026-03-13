@@ -1,0 +1,69 @@
+{
+  "jobName": "BranchTransactionVolume",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "transactions",
+      "schema": "datalake",
+      "table": "transactions",
+      "columns": [
+        "transaction_id",
+        "account_id",
+        "txn_type",
+        "amount",
+        "description"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "accounts",
+      "schema": "datalake",
+      "table": "accounts",
+      "columns": [
+        "account_id",
+        "customer_id",
+        "interest_rate"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "branches",
+      "schema": "datalake",
+      "table": "branches",
+      "columns": [
+        "branch_id",
+        "branch_name",
+        "city",
+        "state_province"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name",
+        "prefix"
+      ]
+    },
+    {
+      "type": "Transformation",
+      "resultName": "branch_txn_vol",
+      "sql": "SELECT t.account_id, a.customer_id, COUNT(*) AS txn_count, ROUND(SUM(t.amount), 2) AS total_amount, t.ifw_effective_date FROM transactions t JOIN accounts a ON t.account_id = a.account_id AND t.ifw_effective_date = a.ifw_effective_date GROUP BY t.account_id, a.customer_id, t.ifw_effective_date ORDER BY t.ifw_effective_date, t.account_id"
+    },
+    {
+      "type": "ParquetFileWriter",
+      "source": "branch_txn_vol",
+      "outputDirectory": "Output/curated",
+      "numParts": 1,
+      "writeMode": "Overwrite",
+      "jobDirName": "branch_transaction_volume",
+      "fileName": "branch_transaction_volume",
+      "outputTableDirName": "branch_transaction_volume"
+    }
+  ]
+}

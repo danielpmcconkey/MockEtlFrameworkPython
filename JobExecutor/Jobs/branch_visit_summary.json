@@ -1,0 +1,45 @@
+{
+  "jobName": "BranchVisitSummary",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "branch_visits",
+      "schema": "datalake",
+      "table": "branch_visits",
+      "columns": [
+        "visit_id",
+        "customer_id",
+        "branch_id",
+        "visit_purpose"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "branches",
+      "schema": "datalake",
+      "table": "branches",
+      "columns": [
+        "branch_id",
+        "branch_name"
+      ]
+    },
+    {
+      "type": "Transformation",
+      "resultName": "visit_summary",
+      "sql": "WITH visit_counts AS (SELECT bv.branch_id, COUNT(*) AS visit_count, bv.ifw_effective_date FROM branch_visits bv GROUP BY bv.branch_id, bv.ifw_effective_date) SELECT vc.branch_id, b.branch_name, vc.ifw_effective_date, vc.visit_count FROM visit_counts vc JOIN branches b ON vc.branch_id = b.branch_id AND vc.ifw_effective_date = b.ifw_effective_date ORDER BY vc.ifw_effective_date, vc.branch_id"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "visit_summary",
+      "includeHeader": true,
+      "trailerFormat": "TRAILER|{row_count}|{date}",
+      "writeMode": "Append",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "branch_visit_summary",
+      "fileName": "branch_visit_summary.csv",
+      "outputTableDirName": "branch_visit_summary"
+    }
+  ]
+}

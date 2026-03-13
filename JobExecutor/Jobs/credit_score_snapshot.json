@@ -1,0 +1,46 @@
+{
+  "jobName": "CreditScoreSnapshot",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "credit_scores",
+      "schema": "datalake",
+      "table": "credit_scores",
+      "columns": [
+        "credit_score_id",
+        "customer_id",
+        "bureau",
+        "score"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "branches",
+      "schema": "datalake",
+      "table": "branches",
+      "columns": [
+        "branch_id",
+        "branch_name",
+        "city",
+        "state_province"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.CreditScoreProcessor"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "CRLF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "credit_score_snapshot",
+      "fileName": "credit_score_snapshot.csv",
+      "outputTableDirName": "credit_score_snapshot"
+    }
+  ]
+}

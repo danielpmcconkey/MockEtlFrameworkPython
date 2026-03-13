@@ -1,0 +1,21 @@
+{
+  "jobName": "CustomerAddressDeltas",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.CustomerAddressDeltaProcessor"
+    },
+    {
+      "type": "ParquetFileWriter",
+      "source": "output",
+      "outputDirectory": "Output/curated",
+      "numParts": 1,
+      "writeMode": "Append",
+      "jobDirName": "customer_address_deltas",
+      "fileName": "customer_address_deltas",
+      "outputTableDirName": "customer_address_deltas"
+    }
+  ]
+}

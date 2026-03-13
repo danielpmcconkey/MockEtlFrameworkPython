@@ -1,0 +1,35 @@
+{
+  "jobName": "CardStatusSnapshot",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "cards",
+      "schema": "datalake",
+      "table": "cards",
+      "columns": [
+        "card_id",
+        "customer_id",
+        "card_type",
+        "card_number_masked",
+        "expiration_date",
+        "card_status"
+      ]
+    },
+    {
+      "type": "Transformation",
+      "resultName": "output",
+      "sql": "SELECT c.card_status, COUNT(*) AS card_count, c.ifw_effective_date FROM cards c GROUP BY c.card_status, c.ifw_effective_date"
+    },
+    {
+      "type": "ParquetFileWriter",
+      "source": "output",
+      "outputDirectory": "Output/curated",
+      "numParts": 50,
+      "writeMode": "Overwrite",
+      "jobDirName": "card_status_snapshot",
+      "fileName": "card_status_snapshot",
+      "outputTableDirName": "card_status_snapshot"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "jobName": "CrossSellCandidates",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "accounts",
+      "schema": "datalake",
+      "table": "accounts",
+      "columns": [
+        "account_id",
+        "customer_id",
+        "account_type"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "cards",
+      "schema": "datalake",
+      "table": "cards",
+      "columns": [
+        "card_id",
+        "customer_id"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "investments",
+      "schema": "datalake",
+      "table": "investments",
+      "columns": [
+        "investment_id",
+        "customer_id"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.CrossSellCandidateFinder"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "cross_sell_candidates",
+      "fileName": "cross_sell_candidates.csv",
+      "outputTableDirName": "cross_sell_candidates"
+    }
+  ]
+}

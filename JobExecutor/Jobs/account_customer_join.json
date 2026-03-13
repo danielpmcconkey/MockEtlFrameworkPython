@@ -1,0 +1,58 @@
+{
+  "jobName": "AccountCustomerJoin",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "accounts",
+      "schema": "datalake",
+      "table": "accounts",
+      "columns": [
+        "account_id",
+        "customer_id",
+        "account_type",
+        "account_status",
+        "current_balance"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "addresses",
+      "schema": "datalake",
+      "table": "addresses",
+      "columns": [
+        "address_id",
+        "customer_id",
+        "address_line1",
+        "city",
+        "state_province"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.AccountCustomerDenormalizer"
+    },
+    {
+      "type": "ParquetFileWriter",
+      "source": "output",
+      "outputDirectory": "Output/curated",
+      "numParts": 2,
+      "writeMode": "Overwrite",
+      "jobDirName": "account_customer_join",
+      "fileName": "account_customer_join",
+      "outputTableDirName": "account_customer_join"
+    }
+  ]
+}

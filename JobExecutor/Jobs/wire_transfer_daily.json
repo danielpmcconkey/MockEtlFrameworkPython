@@ -1,0 +1,47 @@
+{
+  "jobName": "WireTransferDaily",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "wire_transfers",
+      "schema": "datalake",
+      "table": "wire_transfers",
+      "columns": [
+        "wire_id",
+        "customer_id",
+        "account_id",
+        "direction",
+        "amount",
+        "wire_timestamp",
+        "status"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "accounts",
+      "schema": "datalake",
+      "table": "accounts",
+      "columns": [
+        "account_id",
+        "customer_id",
+        "account_type"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.WireTransferDailyProcessor"
+    },
+    {
+      "type": "ParquetFileWriter",
+      "source": "output",
+      "outputDirectory": "Output/curated",
+      "numParts": 1,
+      "writeMode": "Overwrite",
+      "jobDirName": "wire_transfer_daily",
+      "fileName": "wire_transfer_daily",
+      "outputTableDirName": "wire_transfer_daily"
+    }
+  ]
+}

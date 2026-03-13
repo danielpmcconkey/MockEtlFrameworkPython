@@ -1,0 +1,46 @@
+{
+  "jobName": "InvestmentRiskProfile",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "investments",
+      "schema": "datalake",
+      "table": "investments",
+      "columns": [
+        "investment_id",
+        "customer_id",
+        "account_type",
+        "current_value",
+        "risk_profile"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.InvestmentRiskClassifier"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "investment_risk_profile",
+      "fileName": "investment_risk_profile.csv",
+      "outputTableDirName": "investment_risk_profile"
+    }
+  ]
+}

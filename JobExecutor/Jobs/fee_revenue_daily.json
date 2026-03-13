@@ -1,0 +1,39 @@
+{
+  "jobName": "FeeRevenueDaily",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "overdraft_events",
+      "schema": "datalake",
+      "table": "overdraft_events",
+      "columns": [
+        "overdraft_id",
+        "account_id",
+        "customer_id",
+        "overdraft_amount",
+        "fee_amount",
+        "fee_waived",
+        "event_timestamp"
+      ],
+      "minEffectiveDate": "2024-10-01",
+      "maxEffectiveDate": "2024-12-31"
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.FeeRevenueDailyProcessor"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "fee_revenue_daily",
+      "fileName": "fee_revenue_daily.csv",
+      "outputTableDirName": "fee_revenue_daily"
+    }
+  ]
+}

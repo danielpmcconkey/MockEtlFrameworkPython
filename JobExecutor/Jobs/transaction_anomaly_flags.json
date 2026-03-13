@@ -1,0 +1,55 @@
+{
+  "jobName": "TransactionAnomalyFlags",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "transactions",
+      "schema": "datalake",
+      "table": "transactions",
+      "columns": [
+        "transaction_id",
+        "account_id",
+        "txn_type",
+        "amount"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "accounts",
+      "schema": "datalake",
+      "table": "accounts",
+      "columns": [
+        "account_id",
+        "customer_id"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.TransactionAnomalyFlagger"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "transaction_anomaly_flags",
+      "fileName": "transaction_anomaly_flags.csv",
+      "outputTableDirName": "transaction_anomaly_flags"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "jobName": "LargeWireReport",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "wire_transfers",
+      "schema": "datalake",
+      "table": "wire_transfers",
+      "columns": [
+        "wire_id",
+        "customer_id",
+        "direction",
+        "amount",
+        "counterparty_name",
+        "status"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.LargeWireReportBuilder"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "large_wire_report",
+      "fileName": "large_wire_report.csv",
+      "outputTableDirName": "large_wire_report"
+    }
+  ]
+}

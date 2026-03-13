@@ -1,0 +1,56 @@
+{
+  "jobName": "CreditScoreAverage",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "credit_scores",
+      "schema": "datalake",
+      "table": "credit_scores",
+      "columns": [
+        "credit_score_id",
+        "customer_id",
+        "bureau",
+        "score"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "first_name",
+        "last_name"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "segments",
+      "schema": "datalake",
+      "table": "segments",
+      "columns": [
+        "segment_id",
+        "segment_name"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.CreditScoreAverager"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "trailerFormat": "CONTROL|{date}|{row_count}|{timestamp}",
+      "writeMode": "Overwrite",
+      "lineEnding": "CRLF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "credit_score_average",
+      "fileName": "credit_score_average.csv",
+      "outputTableDirName": "credit_score_average"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "jobName": "MarketingEligibleCustomers",
+  "firstEffectiveDate": "2024-10-01",
+  "modules": [
+    {
+      "type": "DataSourcing",
+      "resultName": "customer_preferences",
+      "schema": "datalake",
+      "table": "customer_preferences",
+      "columns": [
+        "preference_id",
+        "customer_id",
+        "preference_type",
+        "opted_in"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "customers",
+      "schema": "datalake",
+      "table": "customers",
+      "columns": [
+        "id",
+        "prefix",
+        "first_name",
+        "last_name",
+        "suffix",
+        "birthdate"
+      ]
+    },
+    {
+      "type": "DataSourcing",
+      "resultName": "email_addresses",
+      "schema": "datalake",
+      "table": "email_addresses",
+      "columns": [
+        "email_id",
+        "customer_id",
+        "email_address",
+        "email_type"
+      ]
+    },
+    {
+      "type": "External",
+      "assemblyPath": "{ETL_ROOT}/ExternalModules/bin/Debug/net8.0/ExternalModules.dll",
+      "typeName": "ExternalModules.MarketingEligibleProcessor"
+    },
+    {
+      "type": "CsvFileWriter",
+      "source": "output",
+      "includeHeader": true,
+      "writeMode": "Overwrite",
+      "lineEnding": "LF",
+      "outputDirectory": "Output/curated",
+      "jobDirName": "marketing_eligible_customers",
+      "fileName": "marketing_eligible_customers.csv",
+      "outputTableDirName": "marketing_eligible_customers"
+    }
+  ]
+}
