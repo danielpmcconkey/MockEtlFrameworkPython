@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import decimal
-import os
-from glob import glob
+from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from etl import date_partition_helper, path_helper
-from etl.module_factory import WriteMode
-from etl.modules.base import Module
+from etl.modules.base import Module, WriteMode
 from etl.modules.data_sourcing import ETL_EFFECTIVE_DATE_KEY
 
 
@@ -47,18 +45,14 @@ class ParquetFileWriter(Module):
             )
 
         date_str = effective_date.isoformat() if hasattr(effective_date, "isoformat") else str(effective_date)
-        table_dir = os.path.join(
-            path_helper.resolve(self.output_directory),
-            self.job_dir_name,
-            self.output_table_dir_name,
-        )
+        table_dir = Path(path_helper.resolve(self.output_directory)) / self.job_dir_name / self.output_table_dir_name
 
         # Append mode: union with prior partition's data
         if self.write_mode == WriteMode.APPEND:
-            prior_date = date_partition_helper.find_latest_partition(table_dir)
+            prior_date = date_partition_helper.find_latest_partition(str(table_dir))
             if prior_date is not None:
-                prior_dir = os.path.join(table_dir, prior_date, self.file_name)
-                if os.path.isdir(prior_dir):
+                prior_dir = table_dir / prior_date / self.file_name
+                if prior_dir.is_dir():
                     prior_df = _read_parquet_dir(prior_dir)
                     if "etl_effective_date" in prior_df.columns:
                         prior_df = prior_df.drop(columns=["etl_effective_date"])
@@ -69,14 +63,14 @@ class ParquetFileWriter(Module):
         df["etl_effective_date"] = date_str
 
         # Output path: {tableDir}/{date}/{fileName}/
-        parquet_dir = os.path.join(table_dir, date_str, self.file_name)
+        parquet_dir = table_dir / date_str / self.file_name
 
         # Overwrite: delete existing parquet files
-        if self.write_mode == WriteMode.OVERWRITE and os.path.isdir(parquet_dir):
-            for f in glob(os.path.join(parquet_dir, "*.parquet")):
-                os.remove(f)
+        if self.write_mode == WriteMode.OVERWRITE and parquet_dir.is_dir():
+            for f in parquet_dir.glob("*.parquet"):
+                f.unlink()
 
-        os.makedirs(parquet_dir, exist_ok=True)
+        parquet_dir.mkdir(parents=True, exist_ok=True)
 
         if df.empty or len(df.columns) == 0:
             return shared_state
@@ -95,7 +89,7 @@ class ParquetFileWriter(Module):
             part_df = df.iloc[offset : offset + count]
             offset += count
 
-            file_path = os.path.join(parquet_dir, f"part-{part:05d}.parquet")
+            file_path = parquet_dir / f"part-{part:05d}.parquet"
             table = pa.Table.from_pandas(part_df, schema=arrow_schema, preserve_index=False)
             pq.write_table(table, file_path)
 
@@ -116,11 +110,11 @@ def _build_arrow_schema(df: pd.DataFrame) -> pa.Schema:
     return pa.schema(fields)
 
 
-def _read_parquet_dir(directory: str) -> pd.DataFrame:
+def _read_parquet_dir(directory: Path) -> pd.DataFrame:
     """Read all .parquet files in a directory and concatenate."""
-    files = sorted(glob(os.path.join(directory, "*.parquet")))
+    files = sorted(directory.glob("*.parquet"))
     if not files:
         return pd.DataFrame()
-    dfs = [pq.read_table(f).to_pandas() for f in files]
+    dfs = [pq.read_table(str(f)).to_pandas() for f in files]
     result = pd.concat(dfs, ignore_index=True)
     return result

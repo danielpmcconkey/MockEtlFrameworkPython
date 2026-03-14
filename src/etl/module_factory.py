@@ -3,14 +3,8 @@
 from __future__ import annotations
 
 from datetime import date
-from enum import Enum
 
-from etl.modules.base import Module
-
-
-class WriteMode(Enum):
-    OVERWRITE = "Overwrite"
-    APPEND = "Append"
+from etl.modules.base import Module, WriteMode  # noqa: F401 — re-export WriteMode
 
 
 def create(config: dict) -> Module:

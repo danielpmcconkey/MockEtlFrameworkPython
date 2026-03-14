@@ -8,8 +8,7 @@ import pandas as pd
 import psycopg
 
 from etl import connection_helper
-from etl.module_factory import WriteMode
-from etl.modules.base import Module
+from etl.modules.base import Module, WriteMode
 
 
 class DataFrameWriter(Module):
@@ -92,12 +91,13 @@ def _coerce_value(val: object) -> object:
 
 
 def _get_postgres_type(sample: object) -> str:
-    if isinstance(sample, (int,)):
+    # bool check must come before int — bool is a subclass of int in Python.
+    if isinstance(sample, bool):
+        return "BOOLEAN"
+    if isinstance(sample, int):
         return "INTEGER"
     if isinstance(sample, float):
         return "DOUBLE PRECISION"
-    if isinstance(sample, bool):
-        return "BOOLEAN"
     if isinstance(sample, date) and not isinstance(sample, datetime):
         return "DATE"
     if isinstance(sample, datetime):

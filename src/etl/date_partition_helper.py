@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-import os
 from datetime import date
+from pathlib import Path
 
 
 def find_latest_partition(job_dir: str) -> str | None:
-    if not os.path.isdir(job_dir):
+    job_path = Path(job_dir)
+    if not job_path.is_dir():
         return None
 
     dates: list[str] = []
-    for name in os.listdir(job_dir):
-        full = os.path.join(job_dir, name)
-        if os.path.isdir(full):
+    for entry in job_path.iterdir():
+        if entry.is_dir():
             try:
-                date.fromisoformat(name)
-                dates.append(name)
+                date.fromisoformat(entry.name)
+                dates.append(entry.name)
             except ValueError:
                 pass
 

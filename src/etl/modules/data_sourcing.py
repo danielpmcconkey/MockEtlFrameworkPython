@@ -135,6 +135,10 @@ class DataSourcing(Module):
               AND ifw_effective_date <= %s
         """
         if self.additional_filter.strip():
+            # NOTE: additional_filter is intentionally f-string interpolated, not
+            # parameterized.  Filters come from our own JSON pipeline configs (trusted
+            # input), and they contain arbitrary SQL predicates that can't be expressed
+            # as bind parameters.  This is NOT user-facing input.
             query += f" AND ({self.additional_filter})"
 
         query += " ORDER BY ifw_effective_date"
