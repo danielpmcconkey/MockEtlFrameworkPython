@@ -63,7 +63,7 @@ MockEtlFrameworkPython/
 |   |   +-- dataframe_writer.py    #   DataFrameWriter
 |   |   +-- csv_file_writer.py     #   CsvFileWriter
 |   |   +-- parquet_file_writer.py #   ParquetFileWriter
-|   |   +-- external.py            #   External (stub)
+|   |   +-- external.py            #   External (registry + importlib dispatcher)
 |   +-- control/                   # Orchestration layer
 |   |   +-- control_db.py          #   ControlDb data access
 |   |   +-- execution_plan.py      #   Topological sort (Kahn's)

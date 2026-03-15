@@ -2,32 +2,55 @@
 
 `src/etl/modules/external.py`
 
-**Stub -- pending implementation.** The External module exists in the codebase as a placeholder. Calling `execute()` raises `NotImplementedError("External modules are Phase 2")`.
+The External module dispatches execution to user-supplied Python functions
+registered under a `typeName` string. In C# this used `Assembly.LoadFrom()` +
+reflection to load a DLL at runtime. In Python, a registry maps typeName
+strings to callables discovered by scanning module directories at startup.
 
-## Intent
+## How It Works
 
-The C# implementation loads a user-supplied .NET assembly from disk via reflection and delegates execution to a named type implementing `IExternalStep`. The Python equivalent will need to provide an analogous plugin mechanism (e.g., dynamic module import via `importlib`) to allow teams to inject arbitrary Python logic into a job pipeline without modifying the framework.
+1. On the first `External.execute()` call, `_load_all()` scans two directories
+   for `.py` files (skipping `_`-prefixed files) and loads each via `importlib`:
+   - **OG modules:** `src/etl/modules/externals/` (73 files)
+   - **RE modules:** `RE/externals/` (populated by the publisher at runtime)
+2. Each module file calls `register(type_name, fn)` at import time, adding
+   itself to the global `_REGISTRY` dict.
+3. When `execute()` is called, it looks up the `typeName` from the job conf
+   in the registry and calls the corresponding function with `shared_state`.
 
-## Current Constructor
-
-Accepts `assembly_path` and `type_name` parameters to match the C# config contract, but neither is used at runtime.
+No hardcoded import lists. Drop a `.py` file in either directory and the
+framework picks it up on next run. Remove a file and nothing breaks.
 
 ## Config Properties
 
 | JSON Property | Required | Description |
 |---|---|---|
 | `type` | Yes | `"External"` |
-| `assemblyPath` | Yes | Path placeholder (not used -- stub) |
-| `typeName` | Yes | Type name placeholder (not used -- stub) |
+| `assemblyPath` | Yes | Path string (retained for C# config compatibility, not used at runtime) |
+| `typeName` | Yes | Registry key, e.g. `"ExternalModules.AccountCustomerDenormalizer"` |
 
 ## Example
 
 ```json
 {
   "type": "External",
-  "assemblyPath": "placeholder/path",
-  "typeName": "placeholder.TypeName"
+  "assemblyPath": "ExternalModules/bin/Release/net8.0/ExternalModules.dll",
+  "typeName": "ExternalModules.AccountCustomerDenormalizer"
 }
 ```
 
-When this module is implemented, the config contract will likely change to reference a Python module path and callable name rather than a .NET assembly.
+## Writing an External Module
+
+Each external module file must:
+1. Define `def execute(shared_state: dict[str, object]) -> dict[str, object]`
+2. Call `register()` at module level to bind a typeName to the function
+
+```python
+from etl.modules.external import register
+
+def execute(shared_state: dict[str, object]) -> dict[str, object]:
+    # ... your logic here ...
+    return shared_state
+
+register("ExternalModules.MyProcessor", execute)
+```
