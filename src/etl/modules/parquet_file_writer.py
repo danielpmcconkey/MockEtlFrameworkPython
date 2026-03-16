@@ -49,7 +49,9 @@ class ParquetFileWriter(Module):
 
         # Append mode: union with prior partition's data
         if self.write_mode == WriteMode.APPEND:
-            prior_date = date_partition_helper.find_latest_partition(str(table_dir))
+            prior_date = date_partition_helper.find_latest_partition(
+                str(table_dir), before=effective_date
+            )
             if prior_date is not None:
                 prior_dir = table_dir / prior_date / self.file_name
                 if prior_dir.is_dir():

@@ -211,3 +211,38 @@ def test_execute_append_mode_unions_with_prior_partition(temp_dir):
         table = pq.read_table(f)
         total += len(table)
     assert total == 3
+
+
+def test_execute_append_mode_rerun_ignores_future_partitions(temp_dir):
+    """Re-running Oct 1 when Oct 31 already exists must NOT pull in Oct 31 data."""
+    table_base = os.path.join(temp_dir, "testjob", "testtable")
+
+    # Simulate a previous full run: write partitions for Oct 1 and Oct 31
+    for day_date, name in [(date(2024, 10, 1), "Alice"), (date(2024, 10, 31), "Zara")]:
+        prior_writer = ParquetFileWriter(
+            "data", temp_dir, "testjob", "testtable", "output",
+            num_parts=1, write_mode=WriteMode.OVERWRITE,
+        )
+        df = pd.DataFrame({"Id": [1], "Name": [name], "Balance": [100.0], "Active": [True]})
+        prior_writer.execute({"data": df, ETL_EFFECTIVE_DATE_KEY: day_date})
+
+    # Re-run Oct 1 with corrected data
+    rerun_date = date(2024, 10, 1)
+    new_df = pd.DataFrame({"Id": [99], "Name": ["Fixed"], "Balance": [0.0], "Active": [True]})
+    writer = ParquetFileWriter(
+        "data", temp_dir, "testjob", "testtable", "output",
+        num_parts=1, write_mode=WriteMode.APPEND,
+    )
+    writer.execute({"data": new_df, ETL_EFFECTIVE_DATE_KEY: rerun_date})
+
+    # Read Oct 1 output — should contain only the new row
+    oct1_dir = os.path.join(table_base, "2024-10-01", "output")
+    total = 0
+    names = []
+    for f in glob(os.path.join(oct1_dir, "*.parquet")):
+        table = pq.read_table(f)
+        total += len(table)
+        names.extend(table.column("Name").to_pylist())
+    assert total == 1
+    assert "Fixed" in names
+    assert "Zara" not in names

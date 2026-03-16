@@ -250,3 +250,35 @@ def test_execute_append_mode_without_trailer_does_not_strip_last_row(temp_dir):
     make_writer(temp_dir, write_mode=WriteMode.APPEND).execute(make_state(new_df))
     lines = read_lines(temp_dir)
     assert len(lines) == 4  # header + 2 prior + 1 new
+
+
+def test_execute_append_mode_rerun_ignores_future_partitions(temp_dir):
+    """Re-running Oct 1 when Oct 31 already exists must NOT pull in Oct 31 data."""
+    table_base = os.path.join(temp_dir, "testjob", "testtable")
+
+    # Simulate a previous full run: partitions for Oct 1 and Oct 31
+    for day, name in [("2024-10-01", "Alice"), ("2024-10-31", "Zara")]:
+        d = os.path.join(table_base, day)
+        os.makedirs(d)
+        with open(os.path.join(d, "output.csv"), "w") as f:
+            f.write(f"Id,Name,City,etl_effective_date\n1,{name},London,{day}\n")
+
+    # Re-run Oct 1 with corrected data
+    rerun_date = date(2024, 10, 1)
+    new_df = pd.DataFrame({"Id": [99], "Name": ["Fixed"], "City": ["Paris"]})
+    state = {"data": new_df, ETL_EFFECTIVE_DATE_KEY: rerun_date}
+    writer = CsvFileWriter(
+        source="data", output_directory=temp_dir, job_dir_name="testjob",
+        output_table_dir_name="testtable", file_name="output.csv",
+        write_mode=WriteMode.APPEND,
+    )
+    writer.execute(state)
+
+    out = os.path.join(table_base, "2024-10-01", "output.csv")
+    with open(out) as f:
+        lines = f.read().splitlines()
+
+    # Should contain only the new row — no prior partition exists before Oct 1
+    assert len(lines) == 2  # header + 1 row
+    assert "Fixed" in lines[1]
+    assert "Zara" not in lines[1]
